@@ -12,11 +12,12 @@ from utils import temp, btn_parser, format_text_results, format_detailed_results
 
 logger = logging.getLogger(__name__)
 
-# ✅ CONSTANTS
+
 REACTIONS = ["👍", "❤️", "🔥", "🥰", "👏", "😁", "🎉", "🤩"]
 DELETE_IMG = "https://graph.org/file/4d61886e61dfa37a25945.jpg" # Image for Thanks Message
 
-# ✅ HELPER: Auto-Delete Logic with Thanks Message
+
+
 async def auto_delete_task(bot_message, user_message, delay, show_thanks, query="files"):
     if delay <= 0: return 
     
@@ -26,7 +27,7 @@ async def auto_delete_task(bot_message, user_message, delay, show_thanks, query=
         # 1. Delete the Search Results (Bot Message)
         await bot_message.delete()
         
-        # 2. Show "Thanks" Message if enabled
+        
         if show_thanks:
             caption = (
                 f"👋 Hᴇʏ fasion lovers, Yᴏᴜʀ Fɪʟᴛᴇʀ Fᴏʀ '{query}' Is Cʟᴏsᴇᴅ 📪\n\n"
@@ -34,7 +35,7 @@ async def auto_delete_task(bot_message, user_message, delay, show_thanks, query=
                 f"Cᴏᴍᴇ Aɢᴀɪɴ! 😊👍"
             )
             
-            # Send Photo with Caption
+    
             temp_msg = await user_message.reply_photo(
                 photo=DELETE_IMG,
                 caption=caption,
@@ -167,6 +168,7 @@ async def auto_filter(client, message):
             )
 
         # --- MODE B: TEXT LIST ---
+        💜😈🌈🙂😈💜😈🥶😊❤️💜💥🌈
         elif mode == 'text':
             page_files = files[offset : offset + limit]
             text = format_text_results(page_files, query, message.chat.id)
