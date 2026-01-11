@@ -4,7 +4,7 @@ import re
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from database.ia_filterdb import Media
-from utils import temp 
+from utils import temp, btn_parser # ✅ btn_parser ab utils se aayega
 
 def get_size(size):
     if not size: return ""
@@ -16,36 +16,22 @@ def get_size(size):
         n += 1
     return f"{size:.2f} {power_labels[n]}B"
 
-@Client.on_message(filters.text & filters.incoming & ~filters.command(["start", "index", "stats", "delete_all", "fix_index"]))
+@Client.on_message(filters.text & filters.incoming & ~filters.command(["start", "index", "stats", "delete_all", "fix_index", "set_shortner", "settings"]))
 async def auto_filter(client, message):
     
     raw_query = message.text
     if len(raw_query) < 2: return
 
-    # --- 🧹 ADVANCED CLEANING (Apki List Ke Hisab Se) ---
-    
-    # Is regex me wo sab words hain jo apne bataye:
-    # 1. Requests: please, pls, plz, ples, send, give, gib, find, chahiye
-    # 2. Actions: send me
-    # 3. Common: movie, new, latest, full movie, file, link
-    # 4. Greetings: hello, hi, bro, bhai, sir, bruh
-    # 5. Languages: hindi, tamil, malayalam, eng
-    # 6. Extras: with subtitles, hd
-    
+    # --- 🧹 CLEANING LOGIC ---
     clean_regex = r"\b(please|pls|plz|ples|send(\s+me)?|give|gib|find|chahiye|movie|new|latest|full\s+movie|file|link|hello|hi|bro|bhai|sir|bruh|hindi|tamil|malayalam|eng|with\s+subtitles|hd)\b"
     
-    # Replace junk with empty space
     query = re.sub(clean_regex, "", raw_query, flags=re.IGNORECASE)
-    
-    # Extra spaces hatao
     query = re.sub(r"\s+", " ", query).strip()
     
-    # Fallback: Agar sab kuch delete ho gaya (e.g. user ne sirf "Hello Sir" likha tha)
     if len(query) < 2:
         query = raw_query
-    # ----------------------------------------
+    # -------------------------
 
-    # ✅ Timer Start
     start_time = time.time()
 
     try:
@@ -62,7 +48,9 @@ async def auto_filter(client, message):
             )
             return
 
-        buttons = btn_parser(files, query)
+        # ✅ CRITICAL UPDATE: 'message.chat.id' pass kiya
+        # Isse button ke link me Group ID chali jayegi (Per-Group Verify ke liye)
+        buttons = btn_parser(files, message.chat.id, query)
         
         msg_text = (
             f"⚡ **Hey {message.from_user.mention}!**\n"
@@ -79,29 +67,5 @@ async def auto_filter(client, message):
         print(f"Search Error: {e}")
         await message.reply_text(f"❌ Error: {e}")
 
-def btn_parser(files, query):
-    buttons = []
-    for file in files:
-        f_name = file['file_name']
-        caption = file.get('caption')
-        link_id = file.get('link_id')
-        f_size = file.get('file_size', 0)
-        
-        display_name = f_name 
-        if caption:
-            q = query.lower()
-            n = f_name.lower()
-            c = caption.lower()
-            if q not in n and q in c:
-                clean_cap = caption.replace("<b>", "").replace("</b>", "").replace("<i>", "").replace("</i>", "")
-                if len(clean_cap) > 60: clean_cap = clean_cap[:57] + "..."
-                display_name = clean_cap
-
-        size_str = get_size(f_size)
-        btn_text = f"📂 {display_name} [{size_str}]"
-        
-        if link_id is not None:
-            url = f"https://t.me/{temp.U_NAME}?start=get_{link_id}"
-            buttons.append([InlineKeyboardButton(text=btn_text, url=url)])
-            
-    return buttons
+# Note: btn_parser function yahan se hata diya gaya hai
+# kyunki wo ab 'utils.py' se import ho raha hai.
